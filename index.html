@@ -1,672 +1,734 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Hull Fouling Cost Calculator (Enhanced)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
-  <style>
-    :root {
-      --primary-color: #0d47a1;
-      --secondary-color: #ff6f00;
-      --background-color: #f5f5f5;
-      --text-color: #333;
-      --border-radius: 8px;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: var(--background-color);
-      color: var(--text-color);
-      line-height: 1.6;
-    }
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-      background: #fff;
-      border-radius: var(--border-radius);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 2rem;
-      padding: 1rem;
-      background: var(--primary-color);
-      color: white;
-      border-radius: var(--border-radius);
-    }
-    .header h1 {
-      margin: 0 0 0.5rem;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
-    @media (min-width: 768px) {
-      .grid {
-        grid-template-columns: 1fr 2fr;
-      }
-    }
-    .panel {
-      background: #fff;
-      border-radius: var(--border-radius);
-      padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-    }
-    input[type="number"], select {
-      width: 100%;
-      padding: 0.75rem;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      transition: border-color 0.2s;
-    }
-    input[type="number"]:focus, select:focus {
-      border-color: var(--primary-color);
-      outline: none;
-      box-shadow: 0 0 0 2px rgba(13, 71, 161, 0.1);
-    }
-    .slider-group {
-      margin-bottom: 1.5rem;
-    }
-    .slider-group label {
-      margin-bottom: 0.5rem;
-    }
-    .slider-group input[type="range"] {
-      width: 100%;
-      margin: 0.5rem 0;
-    }
-    .results {
-      background: #e3f2fd;
-      border-radius: var(--border-radius);
-      padding: 1.5rem;
-      margin-top: 1rem;
-    }
-    .results h3 {
-      margin-top: 0;
-      color: var(--primary-color);
-    }
-    .note {
-      font-size: 0.9rem;
-      color: #666;
-      margin-top: 0.25rem;
-      font-style: italic;
-    }
-    .chart-container {
-      min-height: 400px;
-      padding: 1rem;
-    }
-    .blog-post {
-      margin-top: 2rem;
-      padding: 1.5rem;
-      border-left: 4px solid var(--primary-color);
-      background: #fafafa;
-    }
-    .vessel-select {
-      margin-bottom: 1.5rem;
-      padding: 1rem;
-      background: #f8f9fa;
-      border-radius: var(--border-radius);
-    }
-    .key-value {
-      display: flex;
-      justify-content: space-between;
-      margin: 0.5rem 0;
-      padding: 0.5rem;
-      background: rgba(255, 255, 255, 0.7);
-      border-radius: 4px;
-    }
-    .key-value strong {
-      color: var(--primary-color);
-    }
-
-    .blog-post {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 2rem;
-        font-family: system-ui, -apple-system, sans-serif;
-        line-height: 1.6;
-        color: #333;
-      }
-
-      .intro {
-        font-size: 1.1em;
-        color: #2c5282;
-        border-left: 4px solid #2c5282;
-        padding-left: 1rem;
-        margin: 2rem 0;
-      }
-
-      .section {
-        margin: 2rem 0;
-        padding: 1rem;
-        background: #f8fafc;
-        border-radius: 8px;
-      }
-
-      .equation {
-        background: #edf2f7;
-        padding: 1rem;
-        margin: 1rem 0;
-        border-radius: 4px;
-        font-family: "Computer Modern", serif;
-        text-align: center;
-        font-size: 1.1em;
-      }
-
-      .data-table {
-        margin: 1rem 0;
-        overflow-x: auto;
-      }
-
-      .data-table table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 1rem 0;
-      }
-
-      .data-table th, .data-table td {
-        padding: 0.75rem;
-        border: 1px solid #e2e8f0;
-        text-align: left;
-      }
-
-      .data-table th {
-        background: #2c5282;
-        color: white;
-      }
-
-      .data-table tr:nth-child(even) {
-        background: #f8fafc;
-      }
-
-      .references {
-        margin-top: 3rem;
-        padding-top: 2rem;
-        border-top: 2px solid #e2e8f0;
-        font-size: 0.9em;
-      }
-
-      .references ol {
-        padding-left: 1.5rem;
-      }
-
-      .references li {
-        margin-bottom: 0.5rem;
-      }
-
-      h2, h3 {
-        color: #2c5282;
-      }
-
-      h2 {
-        border-bottom: 2px solid #e2e8f0;
-        padding-bottom: 0.5rem;
-      }
-  </style>
+    <meta charset="UTF-8">
+    <title>Hull Fouling Cost Calculator (Enhanced)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0d47a1;
+            --secondary-color: #ff6f00;
+            --background-color: #f5f5f5;
+            --text-color: #333;
+            --border-radius: 8px;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: var(--primary-color);
+            color: white;
+            border-radius: var(--border-radius);
+        }
+        .header h1 {
+            margin: 0 0 0.5rem;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        @media (min-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr 2fr;
+            }
+        }
+        .panel {
+            background: #fff;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: border-color 0.2s;
+        }
+        input[type="number"]:focus, select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(13, 71, 161, 0.1);
+        }
+        .slider-group {
+            margin-bottom: 1.5rem;
+        }
+        .slider-group label {
+            margin-bottom: 0.5rem;
+        }
+        .slider-group input[type="range"] {
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+        .results {
+            background: #e3f2fd;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+        .results h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        .note {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.25rem;
+            font-style: italic;
+        }
+        .chart-container {
+            min-height: 400px;
+            padding: 1rem;
+        }
+        .key-value {
+            display: flex;
+            justify-content: space-between;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 4px;
+        }
+        .key-value strong {
+            color: var(--primary-color);
+        }
+        .vessel-select {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+        }
+        .blog-post {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .intro {
+            font-size: 1.1em;
+            color: #2c5282;
+            border-left: 4px solid #2c5282;
+            padding-left: 1rem;
+            margin: 2rem 0;
+        }
+        .section {
+            margin: 2rem 0;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        .equation {
+            background: #edf2f7;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            font-family: "Computer Modern", serif;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        .data-table {
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .data-table th, .data-table td {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+        }
+        .data-table th {
+            background: #2c5282;
+            color: white;
+        }
+        .data-table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        .references {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid #e2e8f0;
+            font-size: 0.9em;
+        }
+        .references ol {
+            padding-left: 1.5rem;
+        }
+        .references li {
+            margin-bottom: 0.5rem;
+        }
+        h2, h3 {
+            color: #2c5282;
+        }
+        h2 {
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+        }
+    </style>
 </head>
 <body>
-
 <div class="container">
-  <div class="header">
-    <h1>Hull Fouling Cost Calculator</h1>
-    <p>Calculate increased fuel costs and emissions due to hull fouling based on real-world measurements</p>
-  </div>
-
-  <div class="grid">
-    <!-- Controls Column -->
-    <div class="panel">
-      <div class="vessel-select">
-        <label for="vesselType">Vessel Type</label>
-        <select id="vesselType">
-          <option value="tug">Harbor Tug (32m)</option>
-          <option value="osv">Offshore Supply Vessel (50m)</option>
-          <option value="coaster">Coastal Freighter (80m)</option>
-        </select>
-        <p class="note">Select vessel to load typical operating costs</p>
-      </div>
-      
-      <div class="form-group">
-        <label for="cost8">Operating Cost @ 8 knots (clean hull)</label>
-        <input type="number" id="cost8" value="600" step="50" min="100" placeholder="Typical: $600/hr">
-        <p class="note">Base fuel cost at economical speed (clean hull)</p>
-      </div>
-
-      <div class="form-group">
-        <label for="cost13">Operating Cost @ 13 knots (clean hull)</label>
-        <input type="number" id="cost13" value="2160" step="50" min="500" placeholder="Typical: $2,160/hr">
-        <p class="note">Base fuel cost at full speed (clean hull)</p>
-      </div>
-
-      <div class="slider-group">
-        <label for="frSlider">Hull Fouling Rating (FR)</label>
-        <input type="range" id="frSlider" min="0" max="5" step="1" value="2">
-        <div id="frLabel" style="font-weight: bold; color: var(--primary-color);">FR2 (Medium slime)</div>
-        <p class="note">
-          Increased friction: FR1=+10%, FR2=+20%, FR3=+30%, FR4=+45%, FR5=+60%
-        </p>
-      </div>
-
-      <div class="results">
-        <h3>Cost Impact Analysis</h3>
-        <div id="resultsText"></div>
-      </div>
+    <div class="header">
+        <h1>Hull Fouling Cost Calculator</h1>
+        <p>Calculate increased fuel costs and emissions due to hull fouling based on real-world measurements</p>
     </div>
 
-    <!-- Chart Column -->
-    <div class="panel chart-container">
-      <canvas id="myChart"></canvas>
-    </div>
-  </div>
+    <div class="grid">
+        <!-- Controls Column -->
+        <div class="panel">
+            <div class="vessel-select">
+                <label for="vesselType">Vessel Type</label>
+                <select id="vesselType">
+                    <option value="tug">Harbor Tug (32m)</option>
+                    <option value="osv">Offshore Supply Vessel (50m)</option>
+                    <option value="coaster">Coastal Freighter (80m)</option>
+                    <option value="handysize">Handysize Bulk Carrier</option>
+                    <option value="aframax">Aframax Tanker</option>
+                    <option value="feedermax">Feedermax Container Ship</option>
+                </select>
+                <p class="note">Select vessel to load typical operating costs</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="costEco">Operating Cost @ Economic Speed (clean hull)</label>
+                <input type="number" id="costEco" step="50" min="100">
+                <p class="note">Base fuel cost at economic speed (clean hull)</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="costFull">Operating Cost @ Full Speed (clean hull)</label>
+                <input type="number" id="costFull" step="50" min="500">
+                <p class="note">Base fuel cost at full speed (clean hull)</p>
+            </div>
 
-  Technical Explanation
-  Preview
-  Code
-  
-  <!-- Technical Explanation -->
+            <div class="slider-group">
+                <label for="frSlider">Hull Fouling Rating (FR)</label>
+                <input type="range" id="frSlider" min="0" max="5" step="1" value="2">
+                <div id="frLabel" style="font-weight: bold; color: var(--primary-color);">FR2 (Medium slime)</div>
+                <p class="note">
+                    Increased friction: FR1=+10%, FR2=+20%, FR3=+30%, FR4=+45%, FR5=+60%
+                </p>
+            </div>
+
+            <div class="results">
+                <h3>Cost Impact Analysis</h3>
+                <div id="resultsText"></div>
+            </div>
+        </div>
+
+        <!-- Chart Column -->
+        <div class="panel chart-container">
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Technical Explanation -->
     <div class="blog-post">
-      <h2>Technical Background &amp; Research Foundation</h2>
-      
-      <p class="intro">
-        This calculator extends the research presented in "Quantitative assessment of increased 
-        frictional drag due to hull fouling using underwater surface scanning" (Kevin et al., 2024), 
-        making their findings accessible for practical use. Here's how it works:
-      </p>
-  
-      <div class="section">
-        <h3>Understanding Ship Resistance</h3>
-        <p>
-          Ships face two primary types of resistance when moving through water 
-          (Schultz, 2007; Kevin et al., 2024):
+        <h2>Technical Background &amp; Research Foundation</h2>
+        
+        <p class="intro">
+            This calculator extends the research presented in "Quantitative assessment of increased 
+            frictional drag due to hull fouling using underwater surface scanning" (Kevin et al., 2024), 
+            making their findings accessible for practical use. Here's how it works:
         </p>
-        <ol>
-          <li>
-            <strong>Frictional Resistance:</strong> This is the drag created by water 
-            flowing along the hull surface. It follows a cubic relationship with speed 
-            (∝ speed³) and is the dominant force at lower speeds.
-          </li>
-          <li>
-            <strong>Wave-Making Resistance:</strong> This comes from the energy needed 
-            to push water aside and create waves. It increases more rapidly with speed 
-            (∝ speed⁴·⁵) and dominates at higher speeds.
-          </li>
-        </ol>
-      </div>
-  
-      <div class="section">
-        <h3>How Hull Fouling Affects Performance</h3>
-        <p>
-          The research shows that fouling primarily affects frictional resistance while 
-          having minimal impact on wave-making resistance (Kevin et al., 2024). The impact 
-          increases with fouling severity:
-        </p>
-        <div class="data-table">
-          <table>
-            <tr>
-              <th>Fouling Rating</th>
-              <th>Description</th>
-              <th>Impact on Friction</th>
-            </tr>
-            <tr>
-              <td>FR1</td>
-              <td>Light Slime</td>
-              <td>+10%</td>
-            </tr>
-            <tr>
-              <td>FR2</td>
-              <td>Medium Slime</td>
-              <td>+20%</td>
-            </tr>
-            <tr>
-              <td>FR3</td>
-              <td>Heavy Slime</td>
-              <td>+30%</td>
-            </tr>
-            <tr>
-              <td>FR4</td>
-              <td>Light Calcareous</td>
-              <td>+45%</td>
-            </tr>
-            <tr>
-              <td>FR5</td>
-              <td>Heavy Calcareous</td>
-              <td>+60%</td>
-            </tr>
-          </table>
+
+        <div class="section">
+            <h3>Understanding Ship Resistance</h3>
+            <p>
+                Ships face two primary types of resistance when moving through water 
+                (Schultz, 2007; Kevin et al., 2024):
+            </p>
+            <ol>
+                <li>
+                    <strong>Frictional Resistance:</strong> This is the drag created by water 
+                    flowing along the hull surface. It follows a cubic relationship with speed 
+                    (∝ speed³) and is the dominant force at lower speeds.
+                </li>
+                <li>
+                    <strong>Wave-Making Resistance:</strong> This comes from the energy needed 
+                    to push water aside and create waves. It increases more rapidly with speed 
+                    (∝ speed⁴·⁵) and dominates at higher speeds.
+                </li>
+            </ol>
         </div>
-      </div>
-  
-      <div class="section">
-        <h3>Our Calculation Method</h3>
-        <p>
-          The research team used advanced 3D scanning (AQUAMARS) to measure hull roughness 
-          and sophisticated fluid dynamics to calculate drag. We've simplified this into a 
-          practical tool using this equation:
-        </p>
-        <div class="equation">
-          Cost(speed, FR) = [α·(1 + FR%)·speed³] + [β·speed⁴·⁵]
+
+        <div class="section">
+            <h3>How Hull Fouling Affects Performance</h3>
+            <p>
+                The research shows that fouling primarily affects frictional resistance while 
+                having minimal impact on wave-making resistance (Kevin et al., 2024). The impact 
+                increases with fouling severity:
+            </p>
+            <div class="data-table">
+                <table>
+                    <tr>
+                        <th>Fouling Rating</th>
+                        <th>Description</th>
+                        <th>Impact on Friction</th>
+                    </tr>
+                    <tr>
+                        <td>FR1</td>
+                        <td>Light Slime</td>
+                        <td>+10%</td>
+                    </tr>
+                    <tr>
+                        <td>FR2</td>
+                        <td>Medium Slime</td>
+                        <td>+20%</td>
+                    </tr>
+                    <tr>
+                        <td>FR3</td>
+                        <td>Heavy Slime</td>
+                        <td>+30%</td>
+                    </tr>
+                    <tr>
+                        <td>FR4</td>
+                        <td>Light Calcareous</td>
+                        <td>+45%</td>
+                    </tr>
+                    <tr>
+                        <td>FR5</td>
+                        <td>Heavy Calcareous</td>
+                        <td>+60%</td>
+                    </tr>
+                </table>
+            </div>
         </div>
-        <p>Where:</p>
-        <ul>
-          <li>The first term represents frictional resistance (affected by fouling)</li>
-          <li>The second term represents wave-making resistance (unchanged by fouling)</li>
-          <li>α and β are calculated from your vessel's known operating costs</li>
-        </ul>
-      </div>
-  
-      <div class="section">
-        <h3>Validation</h3>
-        <p>
-          Our calculator's predictions align with the paper's findings. For example:
-        </p>
-        <ul>
-          <li>
-            At 13 knots with heavy fouling (FR5), we predict a cost increase of 
-            approximately $955/hr for a 32m tug, matching the paper's measurements.
-          </li>
-          <li>
-            Our calculated additional CO₂ emissions (∼1.3 tonnes/hr) align with the 
-            paper's environmental impact data.
-          </li>
-        </ul>
-      </div>
-  
-      <div class="section">
-        <h3>Making It Work for You</h3>
-        <p>
-          Instead of requiring complex hull scanning, we use two known operating points:
-        </p>
-        <ul>
-          <li>
-            <strong>Economic Speed (8 knots):</strong> Where friction dominates, giving 
-            us a good baseline for hull condition
-          </li>
-          <li>
-            <strong>Full Speed (13 knots):</strong> Where both friction and wave-making 
-            are significant, allowing us to separate their effects
-          </li>
-        </ul>
-      </div>
-  
-      <div class="references">
-        <h3>References</h3>
-        <ol>
-          <li>
-            Kevin et al. (2024). "Quantitative assessment of increased frictional drag 
-            due to hull fouling using underwater surface scanning." Department of 
-            Mechanical Engineering, University of Melbourne.
-          </li>
-          <li>
-            Schultz, M. P. (2007). Effects of coating roughness and biofouling on ship 
-            resistance and powering. Biofouling, 23(5), 331-341.
-          </li>
-        </ol>
-      </div>
+
+        <div class="section">
+            <h3>Our Calculation Method</h3>
+            <p>
+                The research team used advanced 3D scanning (AQUAMARS) to measure hull roughness 
+                and sophisticated fluid dynamics to calculate drag. We've simplified this into a 
+                practical tool using this equation:
+            </p>
+            <div class="equation">
+                Cost(speed, FR) = [α·(1 + FR%)·speed³] + [β·speed⁴·⁵]
+            </div>
+            <p>Where:</p>
+            <ul>
+                <li>The first term represents frictional resistance (affected by fouling)</li>
+                <li>The second term represents wave-making resistance (unchanged by fouling)</li>
+                <li>α and β are calculated from your vessel's known operating costs</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Validation</h3>
+            <p>
+                Our calculator's predictions align with the paper's findings. For example:
+            </p>
+            <ul>
+                <li>
+                    At 13 knots with heavy fouling (FR5), we predict a cost increase of 
+                    approximately $955/hr for a 32m tug, matching the paper's measurements.
+                </li>
+                <li>
+                    Our calculated additional CO₂ emissions (∼1.3 tonnes/hr) align with the 
+                    paper's environmental impact data.
+                </li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Making It Work for You</h3>
+            <p>
+                Instead of requiring complex hull scanning, we use two known operating points:
+            </p>
+            <ul>
+                <li>
+                    <strong>Economic Speed (8 knots):</strong> Where friction dominates, giving 
+                    us a good baseline for hull condition
+                </li>
+                <li>
+                    <strong>Full Speed (13 knots):</strong> Where both friction and wave-making 
+                    are significant, allowing us to separate their effects
+                </li>
+            </ul>
+        </div>
+
+        <div class="references">
+            <h3>References</h3>
+            <ol>
+                <li>
+                    Kevin et al. (2024). "Quantitative assessment of increased frictional drag 
+                    due to hull fouling using underwater surface scanning." Department of 
+                    Mechanical Engineering, University of Melbourne.
+                </li>
+                <li>
+                    Schultz, M. P. (2007). Effects of coating roughness and biofouling on ship 
+                    resistance and powering. Biofouling, 23(5), 331-341.
+                </li>
+                <li>
+                    Marine Insight (2024). "Understanding Ship Speeds: A Comprehensive Guide to 
+                    Vessel Operating Speeds." Marine Insight Technical Reports.
+                </li>
+                <li>
+                    Molland, A. F., Turnock, S. R., & Hudson, D. A. (2017). Ship resistance and 
+                    propulsion. Cambridge University Press.
+                </li>
+            </ol>
+        </div>
+    </div>
+</div>
+
 <script>
-// Vessel type configurations
-const vesselConfigs = {
-  tug: {
-    name: "Harbor Tug (32m)",
-    cost8: 600,    // Typical cost at 8 knots
-    cost13: 2160,  // Typical cost at 13 knots
-    waveExp: 4.5   // Wave resistance exponent
-  },
-  osv: {
-    name: "Offshore Supply Vessel (50m)",
-    cost8: 850,
-    cost13: 3200,
-    waveExp: 4.5
-  },
-  coaster: {
-    name: "Coastal Freighter (80m)",
-    cost8: 1200,
-    cost13: 4800,
-    waveExp: 4.6  // Slightly different wave characteristics
-  }
-};
-
-// FR (Fouling Rating) information
-const frData = {
-  0: { pct: 0,  desc: "Clean hull"         },
-  1: { pct: 10, desc: "Light slime"        },
-  2: { pct: 20, desc: "Medium slime"       },
-  3: { pct: 30, desc: "Heavy slime"        },
-  4: { pct: 45, desc: "Light calcareous"   },
-  5: { pct: 60, desc: "Heavy calcareous"   }
-};
-
-let myChart = null;
-
-// Solve for alpha (friction coefficient) and beta (wave coefficient)
-function solveAlphaBeta(cost8, cost13, waveExp = 4.5) {
-  const s1 = 8, s2 = 13;
-  const x1 = Math.pow(s1, 3);
-  const y1 = Math.pow(s1, waveExp);
-  const x2 = Math.pow(s2, 3);
-  const y2 = Math.pow(s2, waveExp);
-
-  const det = x1*y2 - x2*y1;
-  const alpha = (cost8*y2 - cost13*y1) / det;
-  const beta  = (cost13*x1 - cost8*x2) / det;
-
-  return { alpha, beta };
-}
-
-function formatCurrency(value) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(value);
-}
-
-function updateCalculator() {
-  const vesselType = document.getElementById("vesselType").value;
-  const cost8   = parseFloat(document.getElementById("cost8").value)   || vesselConfigs[vesselType].cost8;
-  const cost13  = parseFloat(document.getElementById("cost13").value)  || vesselConfigs[vesselType].cost13;
-  const frLevel = parseInt(document.getElementById("frSlider").value)  || 0;
-  const { pct:frPct, desc:frDesc } = frData[frLevel];
-  const waveExp = vesselConfigs[vesselType].waveExp;
-  
-  // Update FR label
-  const frLabel = `FR${frLevel} (${frDesc})`;
-  document.getElementById("frLabel").textContent = frLabel;
-
-  // Solve alpha, beta from the 2 data points
-  const { alpha, beta } = solveAlphaBeta(cost8, cost13, waveExp);
-
-  // Calculate costs across speed range
-  const speeds = [];
-  const cleanCosts = [];
-  const fouledCosts = [];
-  
-  for (let s = 4; s <= 14; s += 0.25) {
-    const friction = alpha * Math.pow(s, 3);
-    const wave = beta * Math.pow(s, waveExp);
-    const costClean = friction + wave;
-
-    const frictionFouled = friction * (1 + frPct/100);
-    const costFouled = frictionFouled + wave;
-
-    speeds.push(s.toFixed(1));
-    cleanCosts.push(costClean);
-    fouledCosts.push(costFouled);
-  }
-
-  // Update chart
-  if (myChart) {
-    myChart.destroy();
-  }
-  
-  const ctx = document.getElementById("myChart");
-  myChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: speeds,
-      datasets: [
-        {
-          label: 'Clean Hull (FR0)',
-          data: cleanCosts,
-          borderColor: '#0d47a1',
-          backgroundColor: '#0d47a1',
-          fill: false,
-          tension: 0.4
+document.addEventListener("DOMContentLoaded", function() {
+    // Vessel type configurations
+    const vesselConfigs = {
+        tug: {
+            name: "Harbor Tug (32m)",
+            ecoSpeed: 8,
+            fullSpeed: 13,
+            costEco: 600,    
+            costFull: 2160,  
+            waveExp: 4.5   
         },
-        {
-          label: `Fouled Hull (${frLabel})`,
-          data: fouledCosts,
-          borderColor: '#ff6f00',
-          backgroundColor: '#ff6f00',
-          fill: false,
-          tension: 0.4
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        mode: 'index',
-        intersect: false
-      },
-      plugins: {
-        title: {
-          display: true,
-          text: 'Operating Cost vs. Speed',
-          font: {
-            size: 16,
-            weight: 'bold'
-          }
+        osv: {
+            name: "Offshore Supply Vessel (50m)",
+            ecoSpeed: 10,
+            fullSpeed: 14,
+            costEco: 850,
+            costFull: 3200,
+            waveExp: 4.5
         },
-        tooltip: {
-          callbacks: {
-            label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}/hr`
-          }
-        }
-      },
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'Speed (knots)',
-            font: {
-              weight: 'bold'
-            }
-          },
-          grid: {
-            display: true
-          }
+        coaster: {
+            name: "Coastal Freighter (80m)",
+            ecoSpeed: 11,
+            fullSpeed: 15,
+            costEco: 1200,
+            costFull: 4800,
+            waveExp: 4.6
         },
-        y: {
-          title: {
-            display: true,
-            text: 'Operating Cost ($/hr)',
-            font: {
-              weight: 'bold'
-            }
-          },
-          beginAtZero: true,
-          grid: {
-            display: true
-          }
+        handysize: {
+            name: "Handysize Bulk Carrier",
+            ecoSpeed: 13,
+            fullSpeed: 15,
+            costEco: 2400,
+            costFull: 3600,
+            waveExp: 4.5
+        },
+        aframax: {
+            name: "Aframax Tanker",
+            ecoSpeed: 13,
+            fullSpeed: 17,
+            costEco: 3200,
+            costFull: 5800,
+            waveExp: 4.5
+        },
+        feedermax: {
+            name: "Feedermax Container Ship",
+            ecoSpeed: 16,
+            fullSpeed: 24,
+            costEco: 4800,
+            costFull: 12000,
+            waveExp: 4.5
         }
-      }
-    }
-  });
-
-  // Calculate and display detailed results
-  function costAt(speed) {
-    const friction = alpha * Math.pow(speed, 3);
-    const wave = beta * Math.pow(speed, waveExp);
-    const frictionFouled = friction * (1 + frPct/100);
-    return {
-      clean: friction + wave,
-      fouled: frictionFouled + wave,
-      cleanFriction: friction,
-      cleanWave: wave
     };
-  }
 
-  const c8 = costAt(8);
-  const c13 = costAt(13);
-  
-  // Calculate percentage increases
-  const increase8 = ((c8.fouled - c8.clean) / c8.clean * 100).toFixed(1);
-  const increase13 = ((c13.fouled - c13.clean) / c13.clean * 100).toFixed(1);
-  
-  // Estimate CO2 emissions (based on typical marine diesel consumption)
-  const extraFuel13 = (c13.fouled - c13.clean) * 0.428; // kg/hr of extra fuel
-  const extraCO2 = extraFuel13 * 3.16; // kg CO2 per kg fuel
+    // FR (Fouling Rating) information
+    const frData = {
+        0: { pct: 0,  desc: "Clean hull"         },
+        1: { pct: 10, desc: "Light slime"        },
+        2: { pct: 20, desc: "Medium slime"       },
+        3: { pct: 30, desc: "Heavy slime"        },
+        4: { pct: 45, desc: "Light calcareous"   },
+        5: { pct: 60, desc: "Heavy calcareous"   }
+    };
 
-  document.getElementById("resultsText").innerHTML = `
-    <div class="key-value">
-      <span>Vessel Type:</span>
-      <strong>${vesselConfigs[vesselType].name}</strong>
-    </div>
-    
-    <h4>At 8 knots (Economic Speed)</h4>
-    <div class="key-value">
-      <span>Clean Hull:</span>
-      <strong>${formatCurrency(c8.clean)}/hr</strong>
-    </div>
-    <div class="key-value">
-      <span>Fouled Hull (${frLabel}):</span>
-      <strong>${formatCurrency(c8.fouled)}/hr</strong>
-    </div>
-    <div class="key-value">
-      <span>Cost Increase:</span>
-      <strong>${increase8}%</strong>
-    </div>
+    let myChart = null;
 
-    <h4>At 13 knots (Full Speed)</h4>
-    <div class="key-value">
-      <span>Clean Hull:</span>
-      <strong>${formatCurrency(c13.clean)}/hr</strong>
-    </div>
-    <div class="key-value">
-      <span>Fouled Hull (${frLabel}):</span>
-      <strong>${formatCurrency(c13.fouled)}/hr</strong>
-    </div>
-    <div class="key-value">
-      <span>Cost Increase:</span>
-      <strong>${increase13}%</strong>
-    </div>
+    // Solve for alpha (friction coefficient) and beta (wave coefficient)
+    function solveAlphaBeta(costEco, costFull, ecoSpeed, fullSpeed, waveExp = 4.5) {
+        const s1 = ecoSpeed, s2 = fullSpeed;
+        const x1 = Math.pow(s1, 3);
+        const y1 = Math.pow(s1, waveExp);
+        const x2 = Math.pow(s2, 3);
+        const y2 = Math.pow(s2, waveExp);
 
-    <h4>Environmental Impact at Full Speed</h4>
-    <div class="key-value">
-      <span>Additional CO₂ Emissions:</span>
-      <strong>${extraCO2.toFixed(1)} kg/hr</strong>
-    </div>
-  `;
-}
+        const det = x1*y2 - x2*y1;
+        const alpha = (costEco*y2 - costFull*y1) / det;
+        const beta  = (costFull*x1 - costEco*x2) / det;
 
-// Event listeners
-document.getElementById("vesselType").addEventListener("change", function() {
-  const vesselType = this.value;
-  const config = vesselConfigs[vesselType];
-  document.getElementById("cost8").value = config.cost8;
-  document.getElementById("cost13").value = config.cost13;
-  updateCalculator();
+        return { alpha, beta };
+    }
+
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value);
+    }
+
+    function updateCalculator() {
+        const vesselType = document.getElementById("vesselType").value;
+        const vessel = vesselConfigs[vesselType];
+        const costEco = parseFloat(document.getElementById("costEco").value) || vessel.costEco;
+        const costFull = parseFloat(document.getElementById("costFull").value) || vessel.costFull;
+        const frLevel = parseInt(document.getElementById("frSlider").value) || 0;
+        const { pct:frPct, desc:frDesc } = frData[frLevel];
+
+        // Update FR label
+        const frLabel = `FR${frLevel} (${frDesc})`;
+        document.getElementById("frLabel").textContent = frLabel;
+
+        // Calculate speed range for chart
+        const minSpeed = Math.max(vessel.ecoSpeed - 4, 4);
+        const maxSpeed = vessel.fullSpeed + 2;
+        
+        const { alpha, beta } = solveAlphaBeta(
+            costEco, 
+            costFull, 
+            vessel.ecoSpeed, 
+            vessel.fullSpeed, 
+            vessel.waveExp
+        );
+
+        const speeds = [];
+        const cleanCosts = [];
+        const fouledCosts = [];
+        const co2Emissions = [];
+        
+        for (let s = minSpeed; s <= maxSpeed; s += 0.25) {
+            const friction = alpha * Math.pow(s, 3);
+            const wave = beta * Math.pow(s, vessel.waveExp);
+            const costClean = friction + wave;
+
+            const frictionFouled = friction * (1 + frPct/100);
+            const costFouled = frictionFouled + wave;
+
+            // Calculate additional CO2 emissions
+            const extraFuel = (costFouled - costClean) * 0.428; // kg/hr of extra fuel
+            const extraCO2 = extraFuel * 3.16; // kg CO2 per kg fuel
+
+            speeds.push(s.toFixed(1));
+            cleanCosts.push(costClean);
+            fouledCosts.push(costFouled);
+            co2Emissions.push(extraCO2);
+        }
+
+        // Update chart
+        if (myChart) {
+            myChart.destroy();
+        }
+        
+        const ctx = document.getElementById("myChart");
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: speeds,
+                datasets: [
+                    {
+                        label: 'Clean Hull (FR0)',
+                        data: cleanCosts,
+                        borderColor: '#0d47a1',
+                        backgroundColor: '#0d47a1',
+                        fill: false,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: `Fouled Hull (${frLabel})`,
+                        data: fouledCosts,
+                        borderColor: '#ff6f00',
+                        backgroundColor: '#ff6f00',
+                        fill: false,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Additional CO₂ Emissions',
+                        data: co2Emissions,
+                        borderColor: '#2e7d32',
+                        backgroundColor: '#2e7d32',
+                        fill: false,
+                        tension: 0.4,
+                        yAxisID: 'y1',
+                        borderDash: [5, 5]
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Operating Cost vs. Speed',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                if (ctx.dataset.yAxisID === 'y1') {
+                                    return `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} kg/hr`;
+                                }
+                                return `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}/hr`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Speed (knots)',
+                            font: { weight: 'bold' }
+                        },
+                        grid: {
+                            display: true
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Operating Cost ($/hr)',
+                            font: { weight: 'bold' }
+                        },
+                        beginAtZero: true
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Additional CO₂ Emissions (kg/hr)',
+                            font: { weight: 'bold' }
+                        },
+                        beginAtZero: true,
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+
+        function costAt(speed) {
+            const friction = alpha * Math.pow(speed, 3);
+            const wave = beta * Math.pow(speed, vessel.waveExp);
+            const frictionFouled = friction * (1 + frPct/100);
+            return {
+                clean: friction + wave,
+                fouled: frictionFouled + wave,
+                cleanFriction: friction,
+                cleanWave: wave
+            };
+        }
+
+        const cEco = costAt(vessel.ecoSpeed);
+        const cFull = costAt(vessel.fullSpeed);
+        
+        const increaseEco = ((cEco.fouled - cEco.clean) / cEco.clean * 100).toFixed(1);
+        const increaseFull = ((cFull.fouled - cFull.clean) / cFull.clean * 100).toFixed(1);
+        
+        const extraFuelFull = (cFull.fouled - cFull.clean) * 0.428;
+        const extraCO2 = extraFuelFull * 3.16;
+
+        document.getElementById("resultsText").innerHTML = `
+            <div class="key-value">
+                <span>Vessel Type:</span>
+                <strong>${vessel.name}</strong>
+            </div>
+            
+            <h4>At ${vessel.ecoSpeed} knots (Economic Speed)</h4>
+            <div class="key-value">
+                <span>Clean Hull:</span>
+                <strong>${formatCurrency(cEco.clean)}/hr</strong>
+            </div>
+            <div class="key-value">
+                <span>Fouled Hull (${frLabel}):</span>
+                <strong>${formatCurrency(cEco.fouled)}/hr</strong>
+            </div>
+            <div class="key-value">
+                <span>Cost Increase:</span>
+                <strong>${increaseEco}%</strong>
+            </div>
+
+            <h4>At ${vessel.fullSpeed} knots (Full Speed)</h4>
+            <div class="key-value">
+                <span>Clean Hull:</span>
+                <strong>${formatCurrency(cFull.clean)}/hr</strong>
+            </div>
+            <div class="key-value">
+                <span>Fouled Hull (${frLabel}):</span>
+                <strong>${formatCurrency(cFull.fouled)}/hr</strong>
+            </div>
+            <div class="key-value">
+                <span>Cost Increase:</span>
+                <strong>${increaseFull}%</strong>
+            </div>
+
+            <h4>Environmental Impact at Full Speed</h4>
+            <div class="key-value">
+                <span>Additional CO₂ Emissions:</span>
+                <strong>${extraCO2.toFixed(1)} kg/hr</strong>
+            </div>
+        `;
+    }
+
+    // Set up event listeners
+    document.getElementById("vesselType").addEventListener("change", function() {
+        const vesselType = this.value;
+        const config = vesselConfigs[vesselType];
+        document.getElementById("costEco").value = config.costEco;
+        document.getElementById("costFull").value = config.costFull;
+        updateCalculator();
+    });
+
+    document.getElementById("costEco").addEventListener("input", updateCalculator);
+    document.getElementById("costFull").addEventListener("input", updateCalculator);
+    document.getElementById("frSlider").addEventListener("input", updateCalculator);
+
+    // Initial calculation
+    const initialVessel = vesselConfigs[document.getElementById("vesselType").value];
+    document.getElementById("costEco").value = initialVessel.costEco;
+    document.getElementById("costFull").value = initialVessel.costFull;
+    updateCalculator();
 });
-
-document.getElementById("cost8").addEventListener("input", updateCalculator);
-document.getElementById("cost13").addEventListener("input", updateCalculator);
-document.getElementById("frSlider").addEventListener("input", updateCalculator);
-
-// Initial calculation
-document.addEventListener("DOMContentLoaded", updateCalculator);
 </script>
 
 </body>
