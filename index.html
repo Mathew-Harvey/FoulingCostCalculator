@@ -202,6 +202,47 @@
             font-weight: 500;
         }
 
+        /* Currency Selector */
+        .currency-selector-container {
+            display: flex;
+            justify-content: center;
+            padding: var(--space-4);
+            margin-top: -var(--space-6);
+            position: relative;
+            z-index: 10;
+        }
+
+        .currency-selector {
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--neutral-100);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+        }
+
+        .currency-selector label {
+            margin-right: var(--space-3);
+            margin-bottom: 0;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .currency-selector select {
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--neutral-400);
+            background-color: var(--neutral-100);
+            color: var(--primary-dark);
+            font-weight: 500;
+        }
+
+        .currency-selector select:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 2px rgba(58, 110, 165, 0.2);
+        }
+
         /* Cards & Panels */
         .card {
             background-color: var(--neutral-100);
@@ -859,6 +900,11 @@
             .chart-container {
                 padding-bottom: 80%;
             }
+            
+            .currency-selector-container {
+                justify-content: center;
+                margin-top: var(--space-4);
+            }
         }
     </style>
 </head>
@@ -872,6 +918,17 @@
                 <p>Calculate the economic and environmental impact of hull fouling with precision, backed by advanced 3D underwater scanning research and academic studies.</p>
             </div>
         </section>
+
+        <!-- Currency Selector -->
+        <div class="currency-selector-container">
+            <div class="currency-selector">
+                <label for="currencySelect"><i class="fas fa-money-bill-wave"></i> Currency:</label>
+                <select id="currencySelect">
+                    <option value="AUD">AUD</option>
+                    <option value="GBP">GBP</option>
+                </select>
+            </div>
+        </div>
 
         <main class="main-content">
             <div class="container">
@@ -1233,6 +1290,21 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    // Currency conversion rates - updated for March 2025
+    const conversionRates = {
+        AUD: 1,
+        GBP: 0.52 // 1 AUD = 0.52 GBP (March 2025 rate)
+    };
+    
+    // Currency symbols
+    const currencySymbols = {
+        AUD: '$',
+        GBP: '£'
+    };
+    
+    // Default currency
+    let currentCurrency = 'AUD';
+    
     // Vessel type configurations - updated with research data from UoM studies
     const vesselConfigs = {
         tug: {
@@ -1282,6 +1354,17 @@ document.addEventListener("DOMContentLoaded", function() {
 
     let myChart = null;
 
+    // Currency conversion function
+    function convertCurrency(amount, fromCurrency, toCurrency) {
+        // Convert to AUD first (base currency)
+        const amountInAUD = fromCurrency === 'AUD' 
+            ? amount 
+            : amount / conversionRates[fromCurrency];
+        
+        // Then convert to target currency
+        return amountInAUD * conversionRates[toCurrency];
+    }
+    
     // Solve for alpha (friction coefficient) and beta (wave coefficient)
     // This implementation follows the physics model described in the UoM papers
     function solveAlphaBeta(costEco, costFull, ecoSpeed, fullSpeed, waveExp = 4.5) {
@@ -1301,7 +1384,8 @@ document.addEventListener("DOMContentLoaded", function() {
     function formatCurrency(value) {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD',
+            currency: currentCurrency === 'AUD' ? 'AUD' : 'GBP',
+            currencyDisplay: 'symbol',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }).format(value);
@@ -1310,6 +1394,11 @@ document.addEventListener("DOMContentLoaded", function() {
     // Function to calculate CO2 emissions based on UoM research data
     // Calibrated to match the direct measurements in the papers
     function calculateExtraCO2(extraCost, vesselType) {
+        // Convert extraCost to AUD for consistent emission calculation
+        const extraCostAUD = currentCurrency === 'AUD' 
+            ? extraCost 
+            : convertCurrency(extraCost, currentCurrency, 'AUD');
+            
         // Calibrated to match research: 1.8T CO2/hr at $1,273/hr extra cost for cruise ship
         let emissionFactor;
         
@@ -1322,7 +1411,7 @@ document.addEventListener("DOMContentLoaded", function() {
             emissionFactor = 1.45; // kg CO2 per $ of extra fuel
         }
         
-        return extraCost * emissionFactor;
+        return extraCostAUD * emissionFactor;
     }
 
     // Get validation status for current configuration
@@ -1350,8 +1439,15 @@ document.addEventListener("DOMContentLoaded", function() {
     function updateCalculator() {
         const vesselType = document.getElementById("vesselType").value;
         const vessel = vesselConfigs[vesselType];
-        const costEco = parseFloat(document.getElementById("costEco").value) || vessel.costEco;
-        const costFull = parseFloat(document.getElementById("costFull").value) || vessel.costFull;
+        
+        // Get input costs in current currency
+        let costEcoInput = parseFloat(document.getElementById("costEco").value) || vessel.costEco;
+        let costFullInput = parseFloat(document.getElementById("costFull").value) || vessel.costFull;
+        
+        // Convert input costs to AUD for calculations if needed
+        let costEco = currentCurrency === 'AUD' ? costEcoInput : convertCurrency(costEcoInput, currentCurrency, 'AUD');
+        let costFull = currentCurrency === 'AUD' ? costFullInput : convertCurrency(costFullInput, currentCurrency, 'AUD');
+        
         const frLevel = parseInt(document.getElementById("frSlider").value) || 0;
         const { pct:frPct, desc:frDesc } = frData[frLevel];
 
@@ -1392,8 +1488,18 @@ document.addEventListener("DOMContentLoaded", function() {
             const extraCO2 = calculateExtraCO2(extraCost, vesselType);
 
             speeds.push(s.toFixed(1));
-            cleanCosts.push(costClean);
-            fouledCosts.push(costFouled);
+            
+            // Convert costs to current currency for display
+            const displayCleanCost = currentCurrency === 'AUD' ? 
+                costClean : 
+                convertCurrency(costClean, 'AUD', currentCurrency);
+                
+            const displayFouledCost = currentCurrency === 'AUD' ? 
+                costFouled : 
+                convertCurrency(costFouled, 'AUD', currentCurrency);
+                
+            cleanCosts.push(displayCleanCost);
+            fouledCosts.push(displayFouledCost);
             co2Emissions.push(extraCO2);
         }
 
@@ -1524,7 +1630,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         position: 'left',
                         title: {
                             display: true,
-                            text: 'Operating Cost ($/hr)',
+                            text: `Operating Cost (${currencySymbols[currentCurrency]}/hr)`,
                             font: { 
                                 weight: 'bold',
                                 size: window.innerWidth < 768 ? 10 : 12
@@ -1538,7 +1644,7 @@ document.addEventListener("DOMContentLoaded", function() {
                             },
                             color: 'rgba(74, 85, 104, 0.8)',
                             callback: function(value) {
-                                return '$' + value;
+                                return currencySymbols[currentCurrency] + value;
                             }
                         },
                         grid: {
@@ -1582,12 +1688,21 @@ document.addEventListener("DOMContentLoaded", function() {
             const clean = friction + wave;
             const fouled = frictionFouled + wave;
             
+            // Convert costs to display currency if needed
+            const displayClean = currentCurrency === 'AUD' ? 
+                clean : 
+                convertCurrency(clean, 'AUD', currentCurrency);
+                
+            const displayFouled = currentCurrency === 'AUD' ? 
+                fouled : 
+                convertCurrency(fouled, 'AUD', currentCurrency);
+            
             // Check if this is a validated data point from UoM research
             const validation = getValidationStatus(vesselType, frLevel, speed);
             
             return {
-                clean: clean,
-                fouled: fouled,
+                clean: displayClean,
+                fouled: displayFouled,
                 cleanFriction: friction,
                 cleanWave: wave,
                 validation: validation
@@ -1713,19 +1828,99 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     }
+    
+    // Update input placeholders based on currency
+    function updateInputPlaceholders() {
+        // Get the current vessel
+        const vesselType = document.getElementById("vesselType").value;
+        const vessel = vesselConfigs[vesselType];
+        
+        // Convert base costs to current currency for placeholders
+        const costEcoConverted = currentCurrency === 'AUD' ? 
+            vessel.costEco : 
+            convertCurrency(vessel.costEco, 'AUD', currentCurrency);
+            
+        const costFullConverted = currentCurrency === 'AUD' ? 
+            vessel.costFull : 
+            convertCurrency(vessel.costFull, 'AUD', currentCurrency);
+        
+        // Update input values if they're empty
+        const costEcoInput = document.getElementById("costEco");
+        const costFullInput = document.getElementById("costFull");
+        
+        if (!costEcoInput.value) {
+            costEcoInput.value = Math.round(costEcoConverted);
+        }
+        
+        if (!costFullInput.value) {
+            costFullInput.value = Math.round(costFullConverted);
+        }
+        
+        // Update input labels to reflect current currency
+        document.querySelectorAll('.help-text').forEach(helpText => {
+            if (helpText.textContent.includes('fuel cost')) {
+                helpText.textContent = helpText.textContent.replace(/\$/, currencySymbols[currentCurrency]);
+            }
+        });
+    }
 
     // Set up event listeners
     document.getElementById("vesselType").addEventListener("change", function() {
         const vesselType = this.value;
         const config = vesselConfigs[vesselType];
-        document.getElementById("costEco").value = config.costEco;
-        document.getElementById("costFull").value = config.costFull;
+        
+        // Convert costs to current currency for display
+        const costEcoConverted = currentCurrency === 'AUD' ? 
+            config.costEco : 
+            convertCurrency(config.costEco, 'AUD', currentCurrency);
+            
+        const costFullConverted = currentCurrency === 'AUD' ? 
+            config.costFull : 
+            convertCurrency(config.costFull, 'AUD', currentCurrency);
+        
+        document.getElementById("costEco").value = Math.round(costEcoConverted);
+        document.getElementById("costFull").value = Math.round(costFullConverted);
+        
         updateCalculator();
     });
 
     document.getElementById("costEco").addEventListener("input", updateCalculator);
     document.getElementById("costFull").addEventListener("input", updateCalculator);
     document.getElementById("frSlider").addEventListener("input", updateCalculator);
+    
+    // Currency selector event listener
+    document.getElementById("currencySelect").addEventListener("change", function() {
+        const newCurrency = this.value;
+        
+        // Skip if currency hasn't changed
+        if (newCurrency === currentCurrency) return;
+        
+        // Get current costs in current currency
+        const costEcoInput = parseFloat(document.getElementById("costEco").value) || 0;
+        const costFullInput = parseFloat(document.getElementById("costFull").value) || 0;
+        
+        // Update currency
+        currentCurrency = newCurrency;
+        
+        // Convert the input costs to the new currency
+        if (costEcoInput > 0) {
+            const convertedCostEco = convertCurrency(costEcoInput, 
+                newCurrency === 'AUD' ? 'GBP' : 'AUD', 
+                newCurrency);
+            document.getElementById("costEco").value = Math.round(convertedCostEco);
+        }
+        
+        if (costFullInput > 0) {
+            const convertedCostFull = convertCurrency(costFullInput, 
+                newCurrency === 'AUD' ? 'GBP' : 'AUD', 
+                newCurrency);
+            document.getElementById("costFull").value = Math.round(convertedCostFull);
+        }
+        
+        // Update input placeholders and calculator
+        updateInputPlaceholders();
+        updateCalculator();
+    });
     
     // Make ticks clickable
     document.querySelectorAll('.range-tick').forEach(tick => {
@@ -1745,6 +1940,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const initialVessel = vesselConfigs[document.getElementById("vesselType").value];
     document.getElementById("costEco").value = initialVessel.costEco;
     document.getElementById("costFull").value = initialVessel.costFull;
+    updateInputPlaceholders();
     updateCalculator();
 });
 </script>
